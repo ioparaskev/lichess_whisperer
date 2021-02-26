@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.1
+// @version      0.3.2
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -26,9 +26,13 @@ function getFormattedMoveNumber(){
     }
 }
 
+function gameInProgress(){
+    return document.getElementsByClassName("header")[0].textContent.includes("Playing right now");
+}
+
 function shouldPrepend(){
     const moves_have_been_played = Boolean(document.getElementsByTagName('l4x')[0]);
-    return moves_have_been_played && document.getElementsByClassName("header")[0].textContent.includes("Playing right now");
+    return moves_have_been_played && gameInProgress();
 }
 
 function escapeRegExp(string) {
@@ -90,23 +94,6 @@ function userIsPlaying(){
     return players.filter(userInPlayers).length != 0;
 }
 
-var checkIfChatBoxExists = setInterval(function() {
-    var chatbox = document.getElementsByClassName('mchat__say')[0];
-
-    if (chatbox) {
-        clearInterval(checkIfChatBoxExists);
-        if (userIsPlaying()){
-            // we reset the chatbox value otherwise it will transfer from game to game
-            chatbox.value = "";
-            chatbox.oninput = whisper;
-        }
-        else{
-            // we reset the chatbox value otherwise it will transfer from game to game
-            chatbox.value = "";
-            chatbox.oninput = nowhisper;
-        }
-    }
-}, 25);
 
 var checkIfMetaExists = setInterval(function() {
     var material = document.getElementsByClassName("game__meta")[0];
@@ -116,21 +103,36 @@ var checkIfMetaExists = setInterval(function() {
         clearInterval(checkIfMetaExists);
 
         var div_block = document.createElement ('div');
-
-        if (userIsPlaying()){
-            // var whisper_btn = document.createElement ('div');
+        div_block.setAttribute("id", "Whisperer")
+        if (gameInProgress()){
             div_block.innerHTML = '<button id="whisperButton" type="button">Whisper</button><button id="prependMoveButton" type="button">Prepend move</button><input type="checkbox" id="hiddenPrependMoveSwitch" value="on" class="hidden"><input type="checkbox" id="hiddenWhisperSwitch" value="on" class="hidden">';
             insertAfter(material, div_block);
+
             document.getElementById ("whisperButton").addEventListener (
                 "click", whisperClickAction, false);
-        }
-        else{
-            div_block.innerHTML = '<button id="prependMoveButton" type="button">Prepend move</button>';
-            insertAfter(material, div_block);
-        }
-        document.getElementById ("prependMoveButton").addEventListener (
+            document.getElementById ("prependMoveButton").addEventListener (
                 "click", prependMoveClickAction, false);
+
+            if (!userIsPlaying()){
+                document.getElementById("hiddenWhisperSwitch").value = "off";
+                document.getElementById("whisperButton").style.display = "none";
+            }
+
+            setChatboxInputMode();
+        }
     }
+}, 25);
+
+var checkStatusUpdates = setInterval(function() {
+    if (document.getElementsByClassName("status")[0]){
+        document.getElementById("hiddenWhisperSwitch").value = "off";
+        document.getElementById("hiddenPrependMoveSwitch").value = "off";
+        document.getElementById("Whisperer").style.display = "none";
+        whisperClickAction();
+        prependMoveClickAction();
+        clearInterval(checkStatusUpdates);
+    }
+
 }, 25);
 
 
@@ -156,6 +158,8 @@ function setChatboxInputMode(){
         }
     }
 }
+
+
 
 function whisperClickAction (zEvent) {
     const whisper_switch_value = document.getElementById("hiddenWhisperSwitch").value;
