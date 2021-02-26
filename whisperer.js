@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.0
+// @version      0.3.1
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -39,42 +39,41 @@ function escapeRegExp(string) {
 var whisper = (event)=>{
     var chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
-        if (shouldPrepend()){
+    if (shouldPrepend()){
+        var matcher = new RegExp(escapeRegExp("/w " + getFormattedMoveNumber()), "i");
+        chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + getFormattedMoveNumber() + " " + chatbox.value;
 
-            var matcher = new RegExp(escapeRegExp("/w " + getFormattedMoveNumber()), "i");
-            chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + getFormattedMoveNumber() + " " + chatbox.value;
+        // strip any extra occurences of /w
+        // solves issue when having the whisper on and switching prepend move from off -> on
+        chatbox.value = chatbox.value.replace(/\/w/g, (i => m => !i++ ? m : '')(0));
 
-            // strip any extra occurences of /w
-            // solves issue when having the whisper on and switching prepend move from off -> on
-            chatbox.value = chatbox.value.replace(/\/w/g, (i => m => !i++ ? m : '')(0));
+        // strip any extra occurences of move number
+        // solves issue when having prepend move on and switching whisper from off -> on
+        const move_number_matcher = new RegExp(escapeRegExp(getFormattedMoveNumber()), "g");
+        chatbox.value = chatbox.value.replace(move_number_matcher, (i => m => !i++ ? m : '')(0));
 
-            // strip any extra occurences of move number
-            // solves issue when having prepend move on and switching whisper from off -> on
-            const move_number_matcher = new RegExp(escapeRegExp(getFormattedMoveNumber()), "g");
-            chatbox.value = chatbox.value.replace(move_number_matcher, (i => m => !i++ ? m : '')(0));
-
-        }
+    }
 }
 
 var whisper_no_move = (event)=>{
     var chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
-        if (shouldPrepend()){
-            var matcher = new RegExp(escapeRegExp("/w "), "i");
-            chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + chatbox.value;
-        }
+    if (shouldPrepend()){
+        var matcher = new RegExp(escapeRegExp("/w "), "i");
+        chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + chatbox.value;
+    }
 }
 
 var nowhisper = (event)=>{
     var chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
-        if (shouldPrepend()){
-            // make sure there's no whisper prepend leftover
-            chatbox.value = chatbox.value.replace(/^\/w\s/i,"");
+    if (shouldPrepend()){
+        // make sure there's no whisper prepend leftover
+        chatbox.value = chatbox.value.replace(/^\/w\s/i,"");
 
-            var matcher = new RegExp(escapeRegExp(getFormattedMoveNumber()), "i");
-            chatbox.value = matcher.test(inputValue) ? chatbox.value : getFormattedMoveNumber() + " " + chatbox.value;
-        }
+        var matcher = new RegExp(escapeRegExp(getFormattedMoveNumber()), "i");
+        chatbox.value = matcher.test(inputValue) ? chatbox.value : getFormattedMoveNumber() + " " + chatbox.value;
+    }
 }
 
 
@@ -218,13 +217,13 @@ GM_addStyle ( `
         display: inline-block;
         font-size: 12px;
     }
-#whisperButton  + #prependMoveButton{
-  margin-left:2px;
-}
-#hiddenPrependMoveSwitch {
-    display: none;
-}
-#hiddenWhisperSwitch {
-    display: none;
-}
+    #whisperButton  + #prependMoveButton{
+      margin-left:2px;
+    }
+    #hiddenPrependMoveSwitch {
+        display: none;
+    }
+    #hiddenWhisperSwitch {
+        display: none;
+    }
 ` );
