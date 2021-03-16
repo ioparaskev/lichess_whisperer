@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.2
+// @version      0.3.3
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -120,11 +120,15 @@ var checkIfMetaExists = setInterval(function() {
 
             setChatboxInputMode();
         }
+        else {
+            div_block.innerHTML = '<button id="whisperButton" type="button">Whisper</button><button id="prependMoveButton" type="button">Prepend move</button><input type="checkbox" id="hiddenPrependMoveSwitch" value="off" class="hidden"><input type="checkbox" id="hiddenWhisperSwitch" value="off" class="hidden">';
+            insertAfter(material, div_block);
+        }
     }
 }, 25);
 
 var checkStatusUpdates = setInterval(function() {
-    if (document.getElementsByClassName("status")[0]){
+    if (document.getElementsByClassName("result-wrap")[0]){
         document.getElementById("hiddenWhisperSwitch").value = "off";
         document.getElementById("hiddenPrependMoveSwitch").value = "off";
         document.getElementById("Whisperer").style.display = "none";
