@@ -27,7 +27,7 @@ function getFormattedMoveNumber(){
 }
 
 function gameInProgress(){
-    return document.getElementsByClassName("header")[0].textContent.includes("Playing right now");
+    return !Boolean(document.getElementsByClassName("game__meta")[0].childNodes[1]);
 }
 
 function shouldPrepend(){
@@ -123,6 +123,8 @@ var checkIfMetaExists = setInterval(function() {
         else {
             div_block.innerHTML = '<button id="whisperButton" type="button">Whisper</button><button id="prependMoveButton" type="button">Prepend move</button><input type="checkbox" id="hiddenPrependMoveSwitch" value="off" class="hidden"><input type="checkbox" id="hiddenWhisperSwitch" value="off" class="hidden">';
             insertAfter(material, div_block);
+            document.getElementById("Whisperer").style.display = "none";
+            document.getElementById("prependMoveButton").style.display = "none";
         }
     }
 }, 25);
