@@ -27,7 +27,7 @@ function getFormattedMoveNumber(){
 }
 
 function gameInProgress(){
-    return !Boolean(document.getElementsByClassName("game__meta")[0].childNodes[1]);
+   return !Boolean(document.getElementsByClassName("game__meta")[0].childNodes[1]);
 }
 
 function shouldPrepend(){
@@ -40,10 +40,25 @@ function escapeRegExp(string) {
 }
 
 
+var user_is_deleting_comment = (event)=>{
+   var inputType = event.inputType;
+   switch(inputType)
+   {
+      case "deleteContentBackward":
+      return true;
+      case "deleteContentForward":
+      return true;
+      default:
+      return false;
+   }
+}
+
+
 var whisper = (event)=>{
     var chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
-    if (shouldPrepend()){
+    console.log("KEY CODE" + inputValue);
+    if (shouldPrepend() && !user_is_deleting_comment(event)){
         var matcher = new RegExp(escapeRegExp("/w " + getFormattedMoveNumber()), "i");
         chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + getFormattedMoveNumber() + " " + chatbox.value;
 
@@ -62,7 +77,7 @@ var whisper = (event)=>{
 var whisper_no_move = (event)=>{
     var chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
-    if (shouldPrepend()){
+    if (shouldPrepend() && !user_is_deleting_comment(event)){
         var matcher = new RegExp(escapeRegExp("/w "), "i");
         chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + chatbox.value;
     }
@@ -71,7 +86,7 @@ var whisper_no_move = (event)=>{
 var nowhisper = (event)=>{
     var chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
-    if (shouldPrepend()){
+    if (shouldPrepend() && !user_is_deleting_comment(event)){
         // make sure there's no whisper prepend leftover
         chatbox.value = chatbox.value.replace(/^\/w\s/i,"");
 
