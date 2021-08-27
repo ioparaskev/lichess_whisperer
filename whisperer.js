@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.6
+// @version      0.3.7
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -27,7 +27,12 @@ function getFormattedMoveNumber(){
 }
 
 function gameInProgress(){
-    if (document.getElementsByClassName("game__meta")[0].childNodes.length == 1 || document.getElementsByClassName("game__meta")[0].childNodes[1].className == "game__tv"){
+    accepted_game_conditions_when_not_playing = ["game__tv", "game__tournament"]
+    if (
+        document.getElementsByClassName("game__meta")[0].childNodes.length == 1 || 
+        accepted_game_conditions_when_not_playing.some(e=>document.getElementsByClassName("game__meta")[0].childNodes[1].className.includes(e))
+       )
+    {
       return true;
     }
     else {
