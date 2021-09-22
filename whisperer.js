@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.10
+// @version      0.3.11
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -192,18 +192,24 @@ function setChatboxInputMode(){
     }
 }
 
+function resetButtonColorOff (button) {
+  button.style.background="#262421" //"#9A2F2E";
+}
 
+function resetButtonColorOn (button) {
+  button.style.background="#384722";
+}
 
 function whisperClickAction (zEvent) {
     const whisper_switch_value = document.getElementById("hiddenWhisperSwitch").value;
 
-    if (whisper_switch_value == "off"){
-        document.getElementById("whisperButton").style.background="#4CAF50";
-        document.getElementById("hiddenWhisperSwitch").value = "on";
+    if (whisper_switch_value == "on"){
+        document.getElementById("hiddenWhisperSwitch").value = "off";
+        resetButtonColorOff(document.getElementById("whisperButton"));
     }
     else{
-        document.getElementById("whisperButton").style.background="#AD0000";
-        document.getElementById("hiddenWhisperSwitch").value = "off";
+        document.getElementById("hiddenWhisperSwitch").value = "on";
+        resetButtonColorOn(document.getElementById("whisperButton"));
     }
     setChatboxInputMode();
 }
@@ -213,11 +219,11 @@ function prependMoveClickAction (zEvent) {
 
     if (prepend_switch_value == "on"){
         document.getElementById("hiddenPrependMoveSwitch").value = "off";
-        document.getElementById("prependMoveButton").style.background="#AD0000";
+        resetButtonColorOff(document.getElementById("prependMoveButton"));
     }
     else {
         document.getElementById("hiddenPrependMoveSwitch").value = "on";
-        document.getElementById("prependMoveButton").style.background="#4CAF50";
+        resetButtonColorOn(document.getElementById("prependMoveButton"));
     }
     setChatboxInputMode();
 }
@@ -235,7 +241,7 @@ GM_addStyle ( `
         padding:                5px 20px;
     }
     #whisperButton {
-        background-color: #4CAF50; /* Green */
+        background-color: #384722; /* Green */
         border: none;
         color: white;
         padding: 12px 12px;
@@ -245,7 +251,7 @@ GM_addStyle ( `
         font-size: 12px;
     }
     #prependMoveButton {
-        background-color: #4CAF50; /* Green */
+        background-color: #384722; /* Green */
         border: none;
         color: white;
         padding: 12px 12px;
@@ -254,9 +260,7 @@ GM_addStyle ( `
         display: inline-block;
         font-size: 12px;
     }
-    #whisperButton  + #prependMoveButton{
-      margin-left:2px;
-    }
+
     #hiddenPrependMoveSwitch {
         display: none;
     }
