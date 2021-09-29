@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.11
+// @version      0.3.12
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -10,6 +10,48 @@
 // ==/UserScript==
 
 /* jshint esversion: 6 */
+
+//--- Style our newly added elements using CSS.
+GM_addStyle ( `
+    #myContainer {
+        position:               absolute;
+        top:                    0;
+        left:                   0;
+        font-size:              10px;
+        margin:                 5px;
+        opacity:                0.9;
+        z-index:                1100;
+        padding:                5px 20px;
+    }
+    #whisperButton {
+        background-color: #384722; /* Green */
+        border: none;
+        color: white;
+        padding: 12px 12px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+    }
+    #prependMoveButton {
+        background-color: #384722; /* Green */
+        border: none;
+        color: white;
+        padding: 12px 12px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+    }
+
+    #hiddenPrependMoveSwitch {
+        display: none;
+    }
+    #hiddenWhisperSwitch {
+        display: none;
+    }
+` );
+
 
 function blackMoved(){
     return document.getElementsByTagName('l4x')[0].children.length % 3 == 0;
@@ -139,19 +181,17 @@ var checkIfMetaExists = setInterval(function() {
                 "click", whisperClickAction, false);
             document.getElementById ("prependMoveButton").addEventListener (
                 "click", prependMoveClickAction, false);
-
+          
+            // reset the colors now so that they match the theme
+            resetButtonColorOn(document.getElementById("whisperButton"));
+            resetButtonColorOn(document.getElementById("prependMoveButton"));
+          
             if (!userIsPlaying()){
                 document.getElementById("hiddenWhisperSwitch").value = "off";
                 document.getElementById("whisperButton").style.display = "none";
             }
 
             setChatboxInputMode();
-        }
-        else {
-            div_block.innerHTML = '<button id="whisperButton" type="button">Whisper</button><button id="prependMoveButton" type="button">Prepend move</button><input type="checkbox" id="hiddenPrependMoveSwitch" value="off" class="hidden"><input type="checkbox" id="hiddenWhisperSwitch" value="off" class="hidden">';
-            insertAfter(material, div_block);
-            document.getElementById("Whisperer").style.display = "none";
-            document.getElementById("prependMoveButton").style.display = "none";
         }
     }
 }, 25);
@@ -176,6 +216,7 @@ function setChatboxInputMode(){
 
     if (whisper_switch_value == "on"){
         if (prepend_switch_value == "on"){
+            resetButtonColorOn(document.getElementById("prependMoveButton"));
             chatbox.oninput = whisper;
         }
         else{
@@ -193,12 +234,37 @@ function setChatboxInputMode(){
 }
 
 function resetButtonColorOff (button) {
-  button.style.background="#262421" //"#9A2F2E";
+  const colors = {
+    "dark": {"background": "#262421", "opacity": "0.5"}, // dark gray
+    "transp": {"background": "#9A2F2E", "opacity": "0.5"}, // red
+    "light": {"background": "#262421", "opacity": "0.5"} // white
+  };
+  for (const [key, value] of Object.entries(colors)) {
+    if (document.body.classList.contains(key)){
+      for (const [property, property_value] of Object.entries(value)) {
+        button.style[property]=property_value;
+      }
+      break;
+    }
+  }
 }
 
 function resetButtonColorOn (button) {
-  button.style.background="#384722";
+  const colors = {
+    "dark": {"background": "#384722", "opacity": "1"}, // dark green
+    "transp": {"background": "#40a35a", "opacity": "0.8"}, // light green
+    "light": {"background": "#307843", "opacity": "0.8"} // light green
+  };
+  for (const [key, value] of Object.entries(colors)) {
+    if (document.body.classList.contains(key)){
+      for (const [property, property_value] of Object.entries(value)) {
+        button.style[property]=property_value;
+      }
+      break;
+    }
+  }
 }
+
 
 function whisperClickAction (zEvent) {
     const whisper_switch_value = document.getElementById("hiddenWhisperSwitch").value;
@@ -228,43 +294,3 @@ function prependMoveClickAction (zEvent) {
     setChatboxInputMode();
 }
 
-//--- Style our newly added elements using CSS.
-GM_addStyle ( `
-    #myContainer {
-        position:               absolute;
-        top:                    0;
-        left:                   0;
-        font-size:              10px;
-        margin:                 5px;
-        opacity:                0.9;
-        z-index:                1100;
-        padding:                5px 20px;
-    }
-    #whisperButton {
-        background-color: #384722; /* Green */
-        border: none;
-        color: white;
-        padding: 12px 12px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 12px;
-    }
-    #prependMoveButton {
-        background-color: #384722; /* Green */
-        border: none;
-        color: white;
-        padding: 12px 12px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 12px;
-    }
-
-    #hiddenPrependMoveSwitch {
-        display: none;
-    }
-    #hiddenWhisperSwitch {
-        display: none;
-    }
-` );
