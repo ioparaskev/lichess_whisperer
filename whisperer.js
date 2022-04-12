@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.13
+// @version      0.3.14
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -54,12 +54,12 @@ GM_addStyle ( `
 
 
 function blackMoved(){
-    return document.getElementsByTagName('l4x')[0].children.length % 3 == 0;
+    return document.getElementsByTagName('l4x')[0].children.length % 3 === 0;
 }
 
 function getFormattedMoveNumber(){
     const move_number = Math.round(document.getElementsByTagName('l4x')[0].children.length / 3);
-    const move = document.getElementsByTagName('l4x')[0].children[document.getElementsByTagName('l4x')[0].children.length -1].textContent
+    const move = document.getElementsByTagName('l4x')[0].children[document.getElementsByTagName('l4x')[0].children.length -1].textContent;
     if (blackMoved()) {
         return "(" + move_number + "..." + move + ")";
     }
@@ -69,9 +69,9 @@ function getFormattedMoveNumber(){
 }
 
 function gameInProgress(){
-    accepted_game_conditions_when_not_playing = ["game__tv", "game__tournament"];
+    const accepted_game_conditions_when_not_playing = ["game__tv", "game__tournament"];
     if (
-        document.getElementsByClassName("game__meta")[0].childNodes.length == 1 || 
+        document.getElementsByClassName("game__meta")[0].childNodes.length === 1 || 
         accepted_game_conditions_when_not_playing.some(e=>document.getElementsByClassName("game__meta")[0].childNodes[1].className.includes(e)) ||
         document.getElementsByClassName("game__meta")[0].childNodes[1].childNodes[0].nodeValue.includes("Chess960") // 960 game 
        )
@@ -93,8 +93,8 @@ function escapeRegExp(string) {
 }
 
 
-var user_is_deleting_comment = (event)=>{
-   var inputType = event.inputType;
+const user_is_deleting_comment = (event)=>{
+   const inputType = event.inputType;
    switch(inputType)
    {
       case "deleteContentBackward":
@@ -104,20 +104,20 @@ var user_is_deleting_comment = (event)=>{
       default:
       return false;
    }
-}
+};
 
 
-var whisper = (event)=>{
-    var chatbox = document.getElementsByClassName('mchat__say')[0];
+const whisper = (event)=>{
+    let chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
     console.log("KEY CODE" + inputValue);
     if (shouldPrepend() && !user_is_deleting_comment(event)){
-        var matcher = new RegExp(escapeRegExp("/w " + getFormattedMoveNumber()), "i");
+        const matcher = new RegExp(escapeRegExp("/w " + getFormattedMoveNumber()), "i");
         chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + getFormattedMoveNumber() + " " + chatbox.value;
 
         // strip any extra occurences of /w
         // solves issue when having the whisper on and switching prepend move from off -> on
-        chatbox.value = chatbox.value.replace(/\/w/g, (i => m => !i++ ? m : '')(0));
+        chatbox.value = chatbox.value.replace(/^\/w/g, (i => m => !i++ ? m : '')(0));
 
         // strip any extra occurences of move number
         // solves issue when having prepend move on and switching whisper from off -> on
@@ -125,28 +125,28 @@ var whisper = (event)=>{
         chatbox.value = chatbox.value.replace(move_number_matcher, (i => m => !i++ ? m : '')(0));
 
     }
-}
+};
 
-var whisper_no_move = (event)=>{
-    var chatbox = document.getElementsByClassName('mchat__say')[0];
+const whisper_no_move = (event)=>{
+    const chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
     if (shouldPrepend() && !user_is_deleting_comment(event)){
-        var matcher = new RegExp(escapeRegExp("/w "), "i");
+        const matcher = new RegExp(escapeRegExp("/w "), "i");
         chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + chatbox.value;
     }
-}
+};
 
-var nowhisper = (event)=>{
-    var chatbox = document.getElementsByClassName('mchat__say')[0];
+const nowhisper = (event)=>{
+    const chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
     if (shouldPrepend() && !user_is_deleting_comment(event)){
         // make sure there's no whisper prepend leftover
         chatbox.value = chatbox.value.replace(/^\/w\s/i,"");
 
-        var matcher = new RegExp(escapeRegExp(getFormattedMoveNumber()), "i");
+        const matcher = new RegExp(escapeRegExp(getFormattedMoveNumber()), "i");
         chatbox.value = matcher.test(inputValue) ? chatbox.value : getFormattedMoveNumber() + " " + chatbox.value;
     }
-}
+};
 
 
 function insertAfter(referenceNode, newNode) {
@@ -159,20 +159,20 @@ function userInPlayers(player, index, array){
 
 function userIsPlaying(){
     const players = Array.from(document.getElementsByClassName("game__meta__players")[0].children);
-    return players.filter(userInPlayers).length != 0;
+    return players.filter(userInPlayers).length !== 0;
 }
 
 
-var checkIfMetaExists = setInterval(function() {
-    var material = document.getElementsByClassName("game__meta")[0];
-    var chatbox = document.getElementsByClassName('mchat__say')[0];
-    var standings = document.getElementsByClassName('mchat__tab tourStanding')[0]
+const checkIfMetaExists = setInterval(function() {
+    const material = document.getElementsByClassName("game__meta")[0];
+    const chatbox = document.getElementsByClassName('mchat__say')[0];
+    const standings = document.getElementsByClassName('mchat__tab tourStanding')[0];
 
     if (material && chatbox && !standings) {
         clearInterval(checkIfMetaExists);
 
-        var div_block = document.createElement ('div');
-        div_block.setAttribute("id", "Whisperer")
+        let div_block = document.createElement ('div');
+        div_block.setAttribute("id", "Whisperer");
         if (gameInProgress()){
             div_block.innerHTML = '<button id="whisperButton" type="button">Whisper</button><button id="prependMoveButton" type="button">Prepend move</button><input type="checkbox" id="hiddenPrependMoveSwitch" value="on" class="hidden"><input type="checkbox" id="hiddenWhisperSwitch" value="on" class="hidden">';
             insertAfter(material, div_block);
@@ -196,7 +196,7 @@ var checkIfMetaExists = setInterval(function() {
     }
 }, 25);
 
-var checkStatusUpdates = setInterval(function() {
+const checkStatusUpdates = setInterval(function() {
     if (document.getElementsByClassName("result-wrap")[0]){
         document.getElementById("hiddenWhisperSwitch").value = "off";
         document.getElementById("hiddenPrependMoveSwitch").value = "off";
@@ -210,12 +210,12 @@ var checkStatusUpdates = setInterval(function() {
 
 
 function setChatboxInputMode(){
-    var chatbox = document.getElementsByClassName('mchat__say')[0];
+    let chatbox = document.getElementsByClassName('mchat__say')[0];
     const whisper_switch_value = document.getElementById("hiddenWhisperSwitch").value;
-    const prepend_switch_value = document.getElementById("hiddenPrependMoveSwitch").value
+    const prepend_switch_value = document.getElementById("hiddenPrependMoveSwitch").value;
 
-    if (whisper_switch_value == "on"){
-        if (prepend_switch_value == "on"){
+    if (whisper_switch_value === "on"){
+        if (prepend_switch_value === "on"){
             resetButtonColorOn(document.getElementById("prependMoveButton"));
             chatbox.oninput = whisper;
         }
@@ -224,7 +224,7 @@ function setChatboxInputMode(){
         }
     }
     else{
-        if (prepend_switch_value == "on"){
+        if (prepend_switch_value === "on"){
             chatbox.oninput = nowhisper;
         }
         else{
@@ -269,7 +269,7 @@ function resetButtonColorOn (button) {
 function whisperClickAction (zEvent) {
     const whisper_switch_value = document.getElementById("hiddenWhisperSwitch").value;
 
-    if (whisper_switch_value == "on"){
+    if (whisper_switch_value === "on"){
         document.getElementById("hiddenWhisperSwitch").value = "off";
         resetButtonColorOff(document.getElementById("whisperButton"));
     }
@@ -281,9 +281,9 @@ function whisperClickAction (zEvent) {
 }
 
 function prependMoveClickAction (zEvent) {
-    const prepend_switch_value = document.getElementById("hiddenPrependMoveSwitch").value
+    const prepend_switch_value = document.getElementById("hiddenPrependMoveSwitch").value;
 
-    if (prepend_switch_value == "on"){
+    if (prepend_switch_value === "on"){
         document.getElementById("hiddenPrependMoveSwitch").value = "off";
         resetButtonColorOff(document.getElementById("prependMoveButton"));
     }
@@ -293,4 +293,5 @@ function prependMoveClickAction (zEvent) {
     }
     setChatboxInputMode();
 }
+
 
