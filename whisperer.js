@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.14
+// @version      0.3.15
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -71,9 +71,9 @@ function getFormattedMoveNumber(){
 function gameInProgress(){
     const accepted_game_conditions_when_not_playing = ["game__tv", "game__tournament"];
     if (
-        document.getElementsByClassName("game__meta")[0].childNodes.length === 1 || 
+        document.getElementsByClassName("game__meta")[0].childNodes.length === 1 ||
         accepted_game_conditions_when_not_playing.some(e=>document.getElementsByClassName("game__meta")[0].childNodes[1].className.includes(e)) ||
-        document.getElementsByClassName("game__meta")[0].childNodes[1].childNodes[0].nodeValue.includes("Chess960") // 960 game 
+        document.getElementsByClassName("game__meta")[0].childNodes[1].childNodes[0].nodeValue.includes("Chess960") // 960 game
        )
     {
       return true;
@@ -86,10 +86,6 @@ function gameInProgress(){
 function shouldPrepend(){
     const moves_have_been_played = Boolean(document.getElementsByTagName('l4x')[0]);
     return moves_have_been_played && gameInProgress();
-}
-
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 
@@ -107,44 +103,46 @@ const user_is_deleting_comment = (event)=>{
 };
 
 
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
+const move_prepend =  new RegExp('\\([0-9]+\.{1,3}.{1,4}\\) ', 'g');
+const whisper_prepend = new RegExp('^\/w ', 'ig');
+const current_move_number_matcher = () => new RegExp(escapeRegExp(getFormattedMoveNumber()), "g");
+
+
+const strip_prependers = (value) => {
+  return value.replace(whisper_prepend,"").replace(move_prepend, "");
+};
+
+
 const whisper = (event)=>{
     let chatbox = document.getElementsByClassName('mchat__say')[0];
     const inputValue = event.currentTarget.value;
     console.log("KEY CODE" + inputValue);
     if (shouldPrepend() && !user_is_deleting_comment(event)){
-        const matcher = new RegExp(escapeRegExp("/w " + getFormattedMoveNumber()), "i");
-        chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + getFormattedMoveNumber() + " " + chatbox.value;
-
-        // strip any extra occurences of /w
-        // solves issue when having the whisper on and switching prepend move from off -> on
-        chatbox.value = chatbox.value.replace(/^\/w/g, (i => m => !i++ ? m : '')(0));
-
-        // strip any extra occurences of move number
-        // solves issue when having prepend move on and switching whisper from off -> on
-        const move_number_matcher = new RegExp(escapeRegExp(getFormattedMoveNumber()), "g");
-        chatbox.value = chatbox.value.replace(move_number_matcher, (i => m => !i++ ? m : '')(0));
-
+				chatbox.value = (current_move_number_matcher().test(chatbox.value) && whisper_prepend.test(chatbox.value)) ? 
+                         chatbox.value :
+                         '/w ' + getFormattedMoveNumber() + " " + strip_prependers(chatbox.value);
     }
 };
 
 const whisper_no_move = (event)=>{
     const chatbox = document.getElementsByClassName('mchat__say')[0];
-    const inputValue = event.currentTarget.value;
     if (shouldPrepend() && !user_is_deleting_comment(event)){
-        const matcher = new RegExp(escapeRegExp("/w "), "i");
-        chatbox.value = matcher.test(inputValue) ? chatbox.value : '/w ' + chatbox.value;
+				chatbox.value = (!move_prepend.test(chatbox.value) && whisper_prepend.test(chatbox.value)) ? 
+                         chatbox.value :
+                         '/w ' + strip_prependers(chatbox.value);
     }
 };
 
 const nowhisper = (event)=>{
     const chatbox = document.getElementsByClassName('mchat__say')[0];
-    const inputValue = event.currentTarget.value;
     if (shouldPrepend() && !user_is_deleting_comment(event)){
-        // make sure there's no whisper prepend leftover
-        chatbox.value = chatbox.value.replace(/^\/w\s/i,"");
-
-        const matcher = new RegExp(escapeRegExp(getFormattedMoveNumber()), "i");
-        chatbox.value = matcher.test(inputValue) ? chatbox.value : getFormattedMoveNumber() + " " + chatbox.value;
+				chatbox.value = (current_move_number_matcher().test(chatbox.value) && !whisper_prepend.test(chatbox.value)) ? 
+                         chatbox.value :
+                         getFormattedMoveNumber() + " " + strip_prependers(chatbox.value);
     }
 };
 
@@ -181,11 +179,11 @@ const checkIfMetaExists = setInterval(function() {
                 "click", whisperClickAction, false);
             document.getElementById ("prependMoveButton").addEventListener (
                 "click", prependMoveClickAction, false);
-          
+
             // reset the colors now so that they match the theme
             resetButtonColorOn(document.getElementById("whisperButton"));
             resetButtonColorOn(document.getElementById("prependMoveButton"));
-          
+
             if (!userIsPlaying()){
                 document.getElementById("hiddenWhisperSwitch").value = "off";
                 document.getElementById("whisperButton").style.display = "none";
@@ -293,5 +291,3 @@ function prependMoveClickAction (zEvent) {
     }
     setChatboxInputMode();
 }
-
-
