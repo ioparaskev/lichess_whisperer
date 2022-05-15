@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.15
+// @version      0.3.16
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -107,7 +107,7 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
-const move_prepend =  new RegExp('\\([0-9]+\.{1,3}.{1,4}\\) ', 'g');
+const move_prepend =  new RegExp('\\([0-9]+\.{1,3}.{1,5}\\) ', 'g');
 const whisper_prepend = new RegExp('^\/w ', 'ig');
 const current_move_number_matcher = () => new RegExp(escapeRegExp(getFormattedMoveNumber()), "g");
 
