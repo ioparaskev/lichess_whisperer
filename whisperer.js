@@ -7,6 +7,8 @@
 // @match        https://lichess.org/*
 // @grant        GM_addStyle
 // @run-at document-end
+// @downloadURL https://update.greasyfork.org/scripts/422291/Lichess%20Whisper%20Switch%20by%20ipr.user.js
+// @updateURL https://update.greasyfork.org/scripts/422291/Lichess%20Whisper%20Switch%20by%20ipr.meta.js
 // ==/UserScript==
 
 /* jshint esversion: 6 */
@@ -152,8 +154,9 @@ function insertAfter(referenceNode, newNode) {
 }
 
 function userInPlayers(player, index, array){
-    return player.textContent.includes(document.getElementById("user_tag").text);
+    return player.textContent.includes(document.getElementById("user_tag").textContent);
 }
+
 
 function userIsPlaying(){
     const players = Array.from(document.getElementsByClassName("game__meta__players")[0].children);
