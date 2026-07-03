@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.17
+// @version      0.3.18
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -55,13 +55,25 @@ GM_addStyle ( `
 ` );
 
 
+// Lichess randomly obfuscates the moves list tag name (previously <l4x>, then
+// <kwdb>, etc.) with every deploy, so we can no longer rely on tag names. The
+// active move always carries the `.a1t` class, so its parent is the moves
+// container regardless of what the surrounding tags are called.
+function getMovesContainer(){
+    const activeMove = document.querySelector('.a1t');
+    return activeMove ? activeMove.parentElement : null;
+}
+
 function blackMoved(){
-    return document.getElementsByTagName('l4x')[0].children.length % 3 === 0;
+    const container = getMovesContainer();
+    return !!container && container.children.length % 3 === 0;
 }
 
 function getFormattedMoveNumber(){
-    const move_number = Math.round(document.getElementsByTagName('l4x')[0].children.length / 3);
-    const move = document.getElementsByTagName('l4x')[0].children[document.getElementsByTagName('l4x')[0].children.length -1].textContent;
+    const container = getMovesContainer();
+    if (!container) return "";
+    const move_number = Math.round(container.children.length / 3);
+    const move = container.children[container.children.length - 1].textContent;
     if (blackMoved()) {
         return "(" + move_number + "..." + move + ")";
     }
@@ -86,8 +98,7 @@ function gameInProgress(){
 }
 
 function shouldPrepend(){
-    const moves_have_been_played = Boolean(document.getElementsByTagName('l4x')[0]);
-    return moves_have_been_played && gameInProgress();
+    return !!getMovesContainer() && gameInProgress();
 }
 
 
