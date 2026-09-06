@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lichess Whisper Switch by ipr
 // @namespace    http://tampermonkey.net/
-// @version      0.3.18
+// @version      0.3.19
 // @description  A simple GreaseMonkey script to toggle auto-whisper on/off and at the same time prepending the current move
 // @author       You
 // @match        https://lichess.org/*
@@ -245,38 +245,50 @@ function setChatboxInputMode(){
     }
 }
 
-function resetButtonColorOff (button) {
-  const colors = {
-    "dark": {"background": "#262421", "opacity": "0.5"}, // dark gray
-    "transp": {"background": "#9A2F2E", "opacity": "0.5"}, // red
-    "light": {"background": "#262421", "opacity": "0.5"} // white
-  };
-  for (const [key, value] of Object.entries(colors)) {
-    if (document.body.classList.contains(key)){
-      for (const [property, property_value] of Object.entries(value)) {
-        button.style[property]=property_value;
-      }
-      break;
+function getLichessTheme() {
+    const classes = document.documentElement.classList;
+
+    // Transparent themes can now coexist with light/dark.
+    // Keep the existing special transparent-button colors.
+    if (classes.contains("transp")) {
+        return "transp";
     }
-  }
+
+    if (classes.contains("light")) {
+        return "light";
+    }
+
+    // Dark is the sensible fallback.
+    return "dark";
 }
 
-function resetButtonColorOn (button) {
-  const colors = {
-    "dark": {"background": "#384722", "opacity": "1"}, // dark green
-    "transp": {"background": "#40a35a", "opacity": "0.8"}, // light green
-    "light": {"background": "#307843", "opacity": "0.8"} // light green
-  };
-  for (const [key, value] of Object.entries(colors)) {
-    if (document.body.classList.contains(key)){
-      for (const [property, property_value] of Object.entries(value)) {
-        button.style[property]=property_value;
-      }
-      break;
-    }
-  }
+function setButtonColor(button, enabled) {
+    const colors = {
+        on: {
+            dark:   { background: "#384722", opacity: "1" },
+            transp: { background: "#40a35a", opacity: "0.8" },
+            light:  { background: "#307843", opacity: "0.8" }
+        },
+        off: {
+            dark:   { background: "#262421", opacity: "0.5" },
+            transp: { background: "#9A2F2E", opacity: "0.5" },
+            light:  { background: "#262421", opacity: "0.5" }
+        }
+    };
+
+    const theme = getLichessTheme();
+    const style = colors[enabled ? "on" : "off"][theme];
+
+    Object.assign(button.style, style);
 }
 
+function resetButtonColorOff(button) {
+    setButtonColor(button, false);
+}
+
+function resetButtonColorOn(button) {
+    setButtonColor(button, true);
+}
 
 function whisperClickAction (zEvent) {
     const whisper_switch_value = document.getElementById("hiddenWhisperSwitch").value;
